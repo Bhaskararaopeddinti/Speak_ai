@@ -13,7 +13,7 @@ import {
   Award,
   Loader2,
 } from 'lucide-react';
-import { LLMAnalysisResult } from '../types';
+import { LLMAnalysisResult, Mistake } from '../types';
 import { AudioPlayer } from './AudioPlayer';
 
 interface FeedbackDisplayProps {
@@ -178,7 +178,7 @@ export const FeedbackDisplay: React.FC<FeedbackDisplayProps> = ({
               Identified Corrections ({analysis.mistakes.length})
             </h4>
             <div className="space-y-2.5">
-              {analysis.mistakes.map((m, idx) => (
+              {analysis.mistakes.map((m: Mistake, idx: number) => (
                 <div
                   key={idx}
                   className="bg-white rounded-2xl p-4 border border-purple-100 shadow-sm space-y-2"

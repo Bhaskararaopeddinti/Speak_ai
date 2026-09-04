@@ -207,7 +207,7 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                 Need ideas? Try speaking one of these in {targetLanguage}:
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {prompts.map((p, idx) => (
+                {prompts.map((p: string, idx: number) => (
                   <div
                     key={idx}
                     className="p-3 bg-slate-50 hover:bg-brand-50/50 rounded-xl border border-slate-200/70 text-xs font-medium text-slate-700 flex items-center justify-between transition-colors group cursor-default"

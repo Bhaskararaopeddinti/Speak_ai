@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   TrendingUp,
   AlertCircle,
-  BarChart2,
   Calendar,
   Sparkles,
   Loader2,
@@ -24,19 +23,19 @@ import {
   Legend,
 } from 'recharts';
 import { api } from '../services/api';
-import { ProgressData, User } from '../types';
+import { ProgressData, User, CommonMistake, ScoreTrend, WeeklySession } from '../types';
 
-interface ProgressViewProps {
+export interface ProgressViewProps {
   user: User | null;
   onRequireAuth: () => void;
 }
 
 export const ProgressView: React.FC<ProgressViewProps> = ({ user, onRequireAuth }) => {
   const [progress, setProgress] = useState<ProgressData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProgress = async () => {
+  const fetchProgress = async (): Promise<void> => {
     if (!user) {
       setIsLoading(false);
       return;
@@ -44,11 +43,12 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ user, onRequireAuth 
     setIsLoading(true);
     setError(null);
     try {
-      const data = await api.getProgress();
+      const data: ProgressData = await api.getProgress();
       setProgress(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch progress metrics';
       console.error('Failed to load progress:', err);
-      setError(err.message || 'Failed to fetch progress metrics');
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -272,9 +272,9 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ user, onRequireAuth 
 
           {progress.common_mistakes && progress.common_mistakes.length > 0 ? (
             <div className="space-y-3 pt-2">
-              {progress.common_mistakes.map((m, idx) => {
-                const maxCount = progress.common_mistakes[0].count || 1;
-                const percent = Math.round((m.count / maxCount) * 100);
+              {progress.common_mistakes.map((m: CommonMistake, idx: number) => {
+                const maxCount: number = progress.common_mistakes[0]?.count || 1;
+                const percent: number = Math.round((m.count / maxCount) * 100);
                 return (
                   <div key={idx} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">

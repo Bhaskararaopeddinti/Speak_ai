@@ -22,6 +22,15 @@ export interface LLMAnalysisResult {
   natural_sentence: string;
 }
 
+export interface SessionMistake {
+  id: string;
+  session_id?: string;
+  mistake_type: string;
+  original_text: string;
+  corrected_text: string;
+  explanation: string;
+}
+
 export interface PracticeSessionRecord {
   id: string;
   user_id: string;
@@ -35,13 +44,24 @@ export interface PracticeSessionRecord {
   naturalness_score: number;
   feedback: string;
   created_at: string;
-  mistakes?: Array<{
-    id: string;
-    mistake_type: string;
-    original_text: string;
-    corrected_text: string;
-    explanation: string;
-  }>;
+  mistakes?: SessionMistake[];
+}
+
+export interface CommonMistake {
+  type: string;
+  count: number;
+}
+
+export interface ScoreTrend {
+  date: string;
+  grammar_score: number;
+  vocabulary_score: number;
+  naturalness_score: number;
+}
+
+export interface WeeklySession {
+  week: string;
+  count: number;
 }
 
 export interface ProgressData {
@@ -51,20 +71,9 @@ export interface ProgressData {
   average_vocabulary_score: number;
   average_naturalness_score: number;
   streak_days: number;
-  common_mistakes: Array<{
-    type: string;
-    count: number;
-  }>;
-  score_trends: Array<{
-    date: string;
-    grammar_score: number;
-    vocabulary_score: number;
-    naturalness_score: number;
-  }>;
-  sessions_per_week: Array<{
-    week: string;
-    count: number;
-  }>;
+  common_mistakes: CommonMistake[];
+  score_trends: ScoreTrend[];
+  sessions_per_week: WeeklySession[];
 }
 
 export interface SystemStatus {
@@ -76,7 +85,23 @@ export interface SystemStatus {
 
 export type ViewType = 'practice' | 'progress' | 'history' | 'settings';
 
-export const SUPPORTED_LANGUAGES = [
+export interface SettingsViewProps {
+  user: User | null;
+  targetLanguage: string;
+  onLanguageChange: (language: string) => void;
+  onShowToast: (message: string, type?: 'success' | 'info' | 'error') => void;
+  selectedVoice: string;
+  onVoiceChange: (voice: string) => void;
+}
+
+export interface SupportedLanguage {
+  code: string;
+  name: string;
+  flag: string;
+  native: string;
+}
+
+export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
   { code: 'es', name: 'Spanish', flag: '🇪🇸', native: 'Español' },
   { code: 'fr', name: 'French', flag: '🇫🇷', native: 'Français' },
   { code: 'de', name: 'German', flag: '🇩🇪', native: 'Deutsch' },
@@ -87,7 +112,13 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'pt', name: 'Portuguese', flag: '🇵🇹', native: 'Português' },
 ];
 
-export const TTS_VOICES = [
+export interface TTSVoiceOption {
+  id: string;
+  name: string;
+  desc: string;
+}
+
+export const TTS_VOICES: TTSVoiceOption[] = [
   { id: 'alloy', name: 'Alloy', desc: 'Neutral, balanced & clear' },
   { id: 'nova', name: 'Nova', desc: 'Warm, engaging & friendly' },
   { id: 'echo', name: 'Echo', desc: 'Smooth, natural baritone' },

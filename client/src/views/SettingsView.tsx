@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Settings as SettingsIcon,
   Key,
   Database,
   Volume2,
@@ -8,23 +7,19 @@ import {
   CheckCircle,
   AlertTriangle,
   Play,
-  User as UserIcon,
   Info,
 } from 'lucide-react';
 import { api } from '../services/api';
-import { SUPPORTED_LANGUAGES, SystemStatus, TTS_VOICES, User } from '../types';
-
-interface SettingsViewProps {
-  user: User | null;
-  targetLanguage: string;
-  onLanguageChange: (lang: string) => void;
-  onShowToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
-  selectedVoice: string;
-  onVoiceChange: (voice: string) => void;
-}
+import {
+  SUPPORTED_LANGUAGES,
+  TTS_VOICES,
+  SystemStatus,
+  SettingsViewProps,
+  SupportedLanguage,
+  TTSVoiceOption,
+} from '../types';
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
-  user,
   targetLanguage,
   onLanguageChange,
   onShowToast,
@@ -32,18 +27,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onVoiceChange,
 }) => {
   const [status, setStatus] = useState<SystemStatus | null>(null);
-  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const [isPlayingPreview, setIsPlayingPreview] = useState<boolean>(false);
 
   useEffect(() => {
-    api.getStatus().then(setStatus).catch(() => {});
+    api.getStatus().then((s: SystemStatus) => setStatus(s)).catch(() => {});
   }, []);
 
-  const handleTestVoice = async (voiceId: string) => {
+  const handleTestVoice = async (voiceId: string): Promise<void> => {
     try {
       setIsPlayingPreview(true);
       await api.textToSpeech('Hello! Welcome to LinguaVoice AI tutor.', targetLanguage, voiceId);
       onShowToast(`Sample preview played for voice "${voiceId}"`, 'info');
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
     } finally {
       setIsPlayingPreview(false);
@@ -73,9 +68,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
-          {SUPPORTED_LANGUAGES.map((lang) => (
+          {SUPPORTED_LANGUAGES.map((lang: SupportedLanguage) => (
             <button
               key={lang.code}
+              type="button"
               onClick={() => {
                 onLanguageChange(lang.name);
                 onShowToast(`Default language changed to ${lang.name}`, 'success');
@@ -105,7 +101,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          {TTS_VOICES.map((v) => (
+          {TTS_VOICES.map((v: TTSVoiceOption) => (
             <div
               key={v.id}
               onClick={() => onVoiceChange(v.id)}
@@ -121,7 +117,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
               <button
                 type="button"
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation();
                   handleTestVoice(v.id);
                 }}

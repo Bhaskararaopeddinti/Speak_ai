@@ -5,18 +5,21 @@ import {
   Filter,
   Volume2,
   Calendar,
-  Sparkles,
   ArrowRight,
-  CheckCircle,
   Loader2,
-  AlertCircle,
   RefreshCw,
 } from 'lucide-react';
 import { api } from '../services/api';
-import { PracticeSessionRecord, SUPPORTED_LANGUAGES, User } from '../types';
+import {
+  PracticeSessionRecord,
+  SessionMistake,
+  SUPPORTED_LANGUAGES,
+  SupportedLanguage,
+  User,
+} from '../types';
 import { AudioPlayer } from '../components/AudioPlayer';
 
-interface HistoryViewProps {
+export interface HistoryViewProps {
   user: User | null;
   onRequireAuth: () => void;
   onShowToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
@@ -28,22 +31,22 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   onShowToast,
 }) => {
   const [sessions, setSessions] = useState<PracticeSessionRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterLang, setFilterLang] = useState<string>('All');
   const [activeAudioSessionId, setActiveAudioSessionId] = useState<string | null>(null);
-  const [audioUrls, setAudioUrls] = useState<{ [key: string]: string }>({});
+  const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
 
-  const fetchSessions = async () => {
+  const fetchSessions = async (): Promise<void> => {
     if (!user) {
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
     try {
-      const data = await api.getSessions();
+      const data: PracticeSessionRecord[] = await api.getSessions();
       setSessions(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load history:', err);
       onShowToast('Could not load practice history', 'error');
     } finally {
@@ -55,19 +58,19 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     fetchSessions();
   }, [user]);
 
-  const handlePlaySessionTTS = async (session: PracticeSessionRecord) => {
+  const handlePlaySessionTTS = async (session: PracticeSessionRecord): Promise<void> => {
     if (audioUrls[session.id]) {
       setActiveAudioSessionId(session.id);
       return;
     }
 
     try {
-      const url = await api.textToSpeech(session.corrected_sentence, session.target_language);
+      const url: string = await api.textToSpeech(session.corrected_sentence, session.target_language);
       if (url) {
-        setAudioUrls((prev) => ({ ...prev, [session.id]: url }));
+        setAudioUrls((prev: Record<string, string>) => ({ ...prev, [session.id]: url }));
         setActiveAudioSessionId(session.id);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Failed to play history TTS:', e);
       onShowToast('Could not synthesize speech', 'error');
     }
@@ -93,11 +96,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     );
   }
 
-  const filteredSessions = sessions.filter((s) => {
-    const matchesSearch =
+  const filteredSessions: PracticeSessionRecord[] = sessions.filter((s: PracticeSessionRecord) => {
+    const matchesSearch: boolean =
       s.transcription.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.corrected_sentence.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesLang = filterLang === 'All' || s.target_language.toLowerCase() === filterLang.toLowerCase();
+    const matchesLang: boolean =
+      filterLang === 'All' || s.target_language.toLowerCase() === filterLang.toLowerCase();
     return matchesSearch && matchesLang;
   });
 
@@ -115,6 +119,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
 
         <button
+          type="button"
           onClick={fetchSessions}
           className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors border border-slate-200 self-start sm:self-auto"
           title="Refresh History"
@@ -131,7 +136,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
             type="text"
             placeholder="Search sentence or correction..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
@@ -140,11 +145,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
           <Filter className="w-4 h-4 text-slate-400" />
           <select
             value={filterLang}
-            onChange={(e) => setFilterLang(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterLang(e.target.value)}
             className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-auto"
           >
             <option value="All">All Languages</option>
-            {SUPPORTED_LANGUAGES.map((l) => (
+            {SUPPORTED_LANGUAGES.map((l: SupportedLanguage) => (
               <option key={l.code} value={l.name}>
                 {l.name}
               </option>
@@ -173,7 +178,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredSessions.map((session) => {
+          {filteredSessions.map((session: PracticeSessionRecord) => {
             const dateStr = new Date(session.created_at).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
@@ -237,7 +242,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                       Mistakes analyzed ({session.mistakes.length})
                     </span>
                     <div className="flex flex-wrap gap-2">
-                      {session.mistakes.map((m) => (
+                      {session.mistakes.map((m: SessionMistake) => (
                         <div
                           key={m.id}
                           className="px-2.5 py-1 bg-purple-50 border border-purple-200/80 rounded-xl text-xs text-purple-900 flex items-center gap-1.5"
@@ -263,6 +268,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                     />
                   ) : (
                     <button
+                      type="button"
                       onClick={() => handlePlaySessionTTS(session)}
                       className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
                     >
