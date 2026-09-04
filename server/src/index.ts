@@ -57,6 +57,27 @@ app.get('/api/sessions', authenticateToken, sessionController.getSessions);
 // GET /api/progress - Return statistics and progress data
 app.get('/api/progress', authenticateToken, sessionController.getProgress);
 
+// Serve client build if available (for production deployments like Render)
+import fs from 'fs';
+
+const clientDistPossiblePaths = [
+  path.resolve(process.cwd(), '../client/dist'),
+  path.resolve(process.cwd(), 'client/dist'),
+  path.resolve(process.cwd(), 'dist/client'),
+];
+
+const clientDistDir = clientDistPossiblePaths.find((p) => fs.existsSync(p));
+if (clientDistDir) {
+  console.log(` Serving frontend static build from: ${clientDistDir}`);
+  app.use(express.static(clientDistDir));
+  app.get('*', (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistDir, 'index.html'));
+  });
+}
+
 // Global Error Handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Unhandled server error:', err);

@@ -4,12 +4,14 @@
   "private": true,
   "description": "LinguaVoice AI - Modern AI Voice Language Tutor",
   "scripts": {
+    "build": "npm --prefix client install && npm --prefix client run build && npm --prefix server install && npm --prefix server run build",
+    "start": "npm --prefix server run start",
     "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "build:client": "npm --prefix client run build",
-    "build:server": "npm --prefix server run build",
-    "start": "npm --prefix server run start"
+    "build:server": "npm --prefix server run build"
   },
   "keywords": [
     "ai",
